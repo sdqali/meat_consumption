@@ -8,8 +8,11 @@ var svg = d3.select("body").append("svg")
 var rateByState = d3.map();
 
 var quantize = d3.scale.quantize()
-    .domain([0, 4.983])
-    .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+    .domain([0, 5])
+    .range(d3.range(30).map(function(i) {
+      var opacity = (i) / 30;
+      return "rgba(49, 132, 255, " + opacity + ")";
+    }));
 
 queue().
   defer(d3.json, "india.json").
@@ -18,6 +21,26 @@ queue().
   }).
   await(ready);
 
+
+function colorLuminance(hex, lum) {
+
+  // validate hex string
+  hex = String(hex).replace(/[^0-9a-f]/gi, '');
+  if (hex.length < 6) {
+    hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  }
+  lum = lum || 0;
+
+  // convert to decimal and change luminosity
+  var rgb = "#", c, i;
+  for (i = 0; i < 3; i++) {
+    c = parseInt(hex.substr(i*2,2), 16);
+    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+    rgb += ("00"+c).substr(c.length);
+  }
+
+  return rgb;
+}
 
 function ready(error, india) {
   if (error) return console.error(error);
@@ -38,8 +61,8 @@ function ready(error, india) {
     .data(topojson.feature(india, india.objects.states).features)
     .enter()
     .append("path")
-    .attr("class", function(d) {
-      return quantize(rateByState.get(d.id));
+    .attr("style", function(d) {
+      return "fill: " + quantize(rateByState.get(d.id)) + ";";
     })
     .attr("d", path);
 
