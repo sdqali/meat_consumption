@@ -17,7 +17,7 @@ var quantize = d3.scale.quantize()
 queue().
   defer(d3.json, "india.json")
   .defer(d3.csv, "consumption.csv", function(d) {
-    rateByState.set(d["State/UT"], +d["All.Rural"])
+    rateByState.set(d["State/UT"], d)
   })
   .await(ready);
 
@@ -46,13 +46,14 @@ function ready(error, india) {
     .enter()
     .append("path")
     .attr("style", function(d) {
-      return "fill: " + quantize(rateByState.get(d.id)) + ";";
+      return "fill: " + quantize(rateByState.get(d.id)["All.Rural"]) + ";";
     })
     .on("mouseover", function(d) {
       tooltip.transition()
         .duration(200)
         .style("opacity", .9);
-      tooltip .html(d.id)
+      tooltip
+	.html(toolTipHtml(d.id))
         .style("left", (d3.event.pageX) + "px")
         .style("top", (d3.event.pageY - 28) + "px");
     })
@@ -68,3 +69,10 @@ function ready(error, india) {
     .attr("class", "states")
     .attr("d", path);
 };
+
+function toolTipHtml(id) {
+  var state = rateByState.get(id);
+  return state["State/UT"] +
+    "<br/>" +
+    state["All.Rural"] + " kg/month";
+}
