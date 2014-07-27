@@ -17,7 +17,7 @@ var quantize = d3.scale.quantize()
 queue().
   defer(d3.json, "india.json")
   .defer(d3.csv, "consumption.csv", function(d) {
-    rateByState.set(d["State/UT"], d)
+    rateByState.set(d.id, d)
   })
   .await(ready);
 
@@ -72,7 +72,7 @@ function ready(error, india) {
 
 function toolTipHtml(id) {
   var state = rateByState.get(id);
-  return state["State/UT"] +
+  return id +
     "<br/>" +
     state["All.Rural"] + " kg/month";
 }
