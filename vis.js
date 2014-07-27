@@ -15,32 +15,16 @@ var quantize = d3.scale.quantize()
     }));
 
 queue().
-  defer(d3.json, "india.json").
-  defer(d3.csv, "consumption.csv", function(d) {
+  defer(d3.json, "india.json")
+  .defer(d3.csv, "consumption.csv", function(d) {
     rateByState.set(d["State/UT"], +d["All.Rural"])
-  }).
-  await(ready);
+  })
+  .await(ready);
 
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
 
-function colorLuminance(hex, lum) {
-
-  // validate hex string
-  hex = String(hex).replace(/[^0-9a-f]/gi, '');
-  if (hex.length < 6) {
-    hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-  }
-  lum = lum || 0;
-
-  // convert to decimal and change luminosity
-  var rgb = "#", c, i;
-  for (i = 0; i < 3; i++) {
-    c = parseInt(hex.substr(i*2,2), 16);
-    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-    rgb += ("00"+c).substr(c.length);
-  }
-
-  return rgb;
-}
 
 function ready(error, india) {
   if (error) return console.error(error);
@@ -63,6 +47,19 @@ function ready(error, india) {
     .append("path")
     .attr("style", function(d) {
       return "fill: " + quantize(rateByState.get(d.id)) + ";";
+    })
+    .on("mouseover", function(d) {
+      tooltip.transition()
+        .duration(200)
+        .style("opacity", .9);
+      tooltip .html(d.id)
+        .style("left", (d3.event.pageX) + "px")
+        .style("top", (d3.event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(d) {
+      tooltip.transition()
+        .duration(500)
+        .style("opacity", 0);
     })
     .attr("d", path);
 
