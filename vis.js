@@ -39,14 +39,4 @@ function ready(error, india) {
     .enter().append("path")
       .attr("class", function(d) { return quantize(rateByState.get(d.id)); })
       .attr("d", path);
-
-  // svg.append("path")
-  //   .datum(subunits)
-  //   .attr("d", path);
-
-  // svg.selectAll(".subunit")
-  //   .data(topojson.feature(india, india.objects.states).features)
-  //   .enter().append("path")
-  //   .attr("class", function(d) { return "subunit " + d.id; })
-  //   .attr("d", path);
 };
