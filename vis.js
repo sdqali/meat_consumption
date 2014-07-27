@@ -1,12 +1,21 @@
-var width = 960,
-height = 960;
+var width = 960;
+var height = 960;
 
 var svg = d3.select("body").append("svg")
   .attr("width", width)
   .attr("height", height);
 
+var rateByState = d3.map();
+
+var quantize = d3.scale.quantize()
+    .domain([0, 4.983])
+    .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
+
 queue().
   defer(d3.json, "india.json").
+  defer(d3.csv, "consumption.csv", function(d) {
+    rateByState.set(d["State/UT"], d["All.Rural"])
+  }).
   await(ready);
 
 
@@ -23,13 +32,21 @@ function ready(error, india) {
   var path = d3.geo.path()
     .projection(projection);
 
-  svg.append("path")
-    .datum(subunits)
-    .attr("d", path);
-
-  svg.selectAll(".subunit")
-    .data(topojson.feature(india, india.objects.states).features)
+  svg.append("g")
+      .attr("class", "states")
+    .selectAll("path")
+      .data(topojson.feature(india, india.objects.states).features)
     .enter().append("path")
-    .attr("class", function(d) { return "subunit " + d.id; })
-    .attr("d", path);
+      .attr("class", function(d) { return quantize(rateByState.get(d.id)); })
+      .attr("d", path);
+
+  // svg.append("path")
+  //   .datum(subunits)
+  //   .attr("d", path);
+
+  // svg.selectAll(".subunit")
+  //   .data(topojson.feature(india, india.objects.states).features)
+  //   .enter().append("path")
+  //   .attr("class", function(d) { return "subunit " + d.id; })
+  //   .attr("d", path);
 };
