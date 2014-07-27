@@ -8,13 +8,13 @@ var svg = d3.select("body").append("svg")
 var rateByState = d3.map();
 
 var quantize = d3.scale.quantize()
-    .domain([0, 1.135])
+    .domain([0, 4.983])
     .range(d3.range(9).map(function(i) { return "q" + i + "-9"; }));
 
 queue().
   defer(d3.json, "india.json").
   defer(d3.csv, "consumption.csv", function(d) {
-    rateByState.set(d["State/UT"], +d["Beef.Rural"])
+    rateByState.set(d["State/UT"], +d["All.Rural"])
   }).
   await(ready);
 
@@ -39,8 +39,12 @@ function ready(error, india) {
     .enter()
     .append("path")
     .attr("class", function(d) {
-      console.log(d.id + ": " + rateByState.get(d.id));
       return quantize(rateByState.get(d.id));
     })
+    .attr("d", path);
+
+  svg.append("path")
+    .datum(topojson.mesh(india, india.objects.states, function(a, b) { return a !== b; }))
+    .attr("class", "states")
     .attr("d", path);
 };
