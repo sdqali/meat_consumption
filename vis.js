@@ -7,26 +7,33 @@ var svg = d3.select("body").append("svg")
 
 var rateByState = d3.map();
 
-var quantize = d3.scale.quantize()
-    .domain([0, 5])
-    .range(d3.range(30).map(function(i) {
-      var opacity = (i) / 30;
+var quantize = function(min, max, len) {
+  return d3.scale.quantize()
+    .domain([min, max])
+    .range(d3.range(len).map(function(i) {
+      var opacity = (i) / len;
       return "rgba(49, 132, 255, " + opacity + ")";
     }));
+};
 
-queue().
-  defer(d3.json, "india.json")
-  .defer(d3.csv, "consumption.csv", function(d) {
-    rateByState.set(d.id, d)
-  })
-  .await(ready);
+function drawVis(item) {
+  queue().
+    defer(d3.json, "india.json")
+    .defer(d3.csv, "consumption.csv", function(d) {
+      rateByState.set(d.id, d)
+    })
+    .await(function(error, india) {
+      ready(error, india, item)
+    });
+}
+
 
 var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
 
 
-function ready(error, india) {
+function ready(error, india, item) {
   if (error) return console.error(error);
 
   var subunits = topojson.feature(india, india.objects.states);
@@ -46,14 +53,14 @@ function ready(error, india) {
     .enter()
     .append("path")
     .attr("style", function(d) {
-      return "fill: " + quantize(rateByState.get(d.id)["All.Rural"]) + ";";
+      return "fill: " + quantize(0, 5, 30)(rateByState.get(d.id)[item]) + ";";
     })
     .on("mouseover", function(d) {
       tooltip.transition()
         .duration(200)
         .style("opacity", .9);
       tooltip
-	.html(toolTipHtml(d.id))
+	.html(toolTipHtml(d.id, item))
         .style("left", (d3.event.pageX) + "px")
         .style("top", (d3.event.pageY - 28) + "px");
     })
@@ -70,9 +77,11 @@ function ready(error, india) {
     .attr("d", path);
 };
 
-function toolTipHtml(id) {
+function toolTipHtml(id, item) {
   var state = rateByState.get(id);
   return id +
     "<br/>" +
-    state["All.Rural"] + " kg/month";
+    state[item] + " kg/month";
 }
+
+drawVis("All.Rural");
