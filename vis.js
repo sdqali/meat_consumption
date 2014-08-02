@@ -5,22 +5,23 @@ var svg = d3.select("body").append("svg")
   .attr("width", width)
   .attr("height", height);
 
-var rateByState = d3.map();
+var data = d3.map();
 
 var quantize = function(min, max, len) {
   return d3.scale.quantize()
     .domain([min, max])
     .range(d3.range(len).map(function(i) {
-      var opacity = (i) / len;
+      var opacity = (i + 1) / len;
       return "rgba(49, 132, 255, " + opacity + ")";
     }));
 };
 
 function drawVis(item) {
+  svg.selectAll("*").remove();
   queue().
     defer(d3.json, "india.json")
     .defer(d3.csv, "consumption.csv", function(d) {
-      rateByState.set(d.id, d)
+      data.set(d.id, d)
     })
     .await(function(error, india) {
       ready(error, india, item)
@@ -46,6 +47,18 @@ function ready(error, india, item) {
   var path = d3.geo.path()
     .projection(projection);
 
+
+  var ids = data.keys();
+
+  var maxValue = d3.max(ids, function(id) {
+    return data.get(id)[item];
+  });
+
+  var minValue = d3.min(ids, function(id) {
+    return data.get(id)[item];
+  });
+
+
   svg.append("g")
     .attr("class", "states")
     .selectAll("path")
@@ -53,7 +66,7 @@ function ready(error, india, item) {
     .enter()
     .append("path")
     .attr("style", function(d) {
-      return "fill: " + quantize(0, 5, 30)(rateByState.get(d.id)[item]) + ";";
+      return "fill: " + quantize(minValue, maxValue, ids.length)(data.get(d.id)[item]) + ";";
     })
     .on("mouseover", function(d) {
       tooltip.transition()
@@ -78,10 +91,8 @@ function ready(error, india, item) {
 };
 
 function toolTipHtml(id, item) {
-  var state = rateByState.get(id);
+  var state = data.get(id);
   return id +
     "<br/>" +
     state[item] + " kg/month";
 }
-
-drawVis("All.Rural");
