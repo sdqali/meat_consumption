@@ -41,8 +41,8 @@ function ready(error, item) {
 
   var projection = d3.geo.mercator()
     .center([83, 22.5])
-    .scale(1200)
-    .translate([width / 2, height * 2 / 5]);
+    .scale(1100)
+    .translate([width / 2, height * 1 / 3]);
 
   var path = d3.geo.path()
     .projection(projection);
