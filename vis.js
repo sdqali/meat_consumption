@@ -6,25 +6,24 @@ var svg = d3.select("body").append("svg")
   .attr("height", height);
 
 var data = d3.map();
+var india = {};
+
 
 var quantize = function(min, max, len) {
-  return d3.scale.quantize()
-    .domain([min, max])
-    .range(d3.range(len).map(function(i) {
-      var opacity = (i + 1) / len;
-      return "rgba(49, 132, 255, " + opacity + ")";
-    }));
+  return d3.scale.linear()
+    .domain([0, 3.883])
+    .range([0.0, 1.0]);
 };
 
 function drawVis(item) {
-  svg.selectAll("*").remove();
   queue().
     defer(d3.json, "india.json")
     .defer(d3.csv, "consumption.csv", function(d) {
       data.set(d.id, d)
     })
-    .await(function(error, india) {
-      ready(error, india, item)
+    .await(function(error, data) {
+      india = data;
+      ready(error, item)
     });
 }
 
@@ -34,15 +33,16 @@ var tooltip = d3.select("body").append("div")
     .style("opacity", 0);
 
 
-function ready(error, india, item) {
+function ready(error, item) {
   if (error) return console.error(error);
+  svg.selectAll("*").remove();
 
   var subunits = topojson.feature(india, india.objects.states);
 
   var projection = d3.geo.mercator()
     .center([83, 22.5])
     .scale(1200)
-    .translate([width / 2, height / 3]);
+    .translate([width / 2, height * 2 / 5]);
 
   var path = d3.geo.path()
     .projection(projection);
@@ -66,7 +66,7 @@ function ready(error, india, item) {
     .enter()
     .append("path")
     .attr("style", function(d) {
-      return "fill: " + quantize(minValue, maxValue, ids.length)(data.get(d.id)[item]) + ";";
+      return "fill: rgba(0, 0, 66," + quantize(minValue, maxValue, ids.length)(data.get(d.id)[item]) + ");";
     })
     .on("mouseover", function(d) {
       tooltip.transition()
